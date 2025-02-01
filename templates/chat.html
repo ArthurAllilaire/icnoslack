@@ -5,6 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chat Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .prose {
+            max-width: none;
+        }
+        .prose p {
+            margin-top: 1em;
+            margin-bottom: 1em;
+            white-space: pre-wrap;
+        }
+        .prose ul, .prose ol {
+            margin: 1em 0;
+            padding-left: 2em;
+            list-style: disc outside none;
+        }
+        .prose li {
+            margin: 0.5em 0;
+            padding-left: 0.5em;
+        }
+        .prose h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 1.5em 0 0.5em 0;
+        }
+        .prose h3 {
+            font-size: 1.25em;
+            font-weight: bold;
+            margin: 1.25em 0 0.5em 0;
+        }
+        .prose code {
+            background-color: #f3f4f6;
+            padding: 0.2em 0.4em;
+            border-radius: 0.25em;
+            font-family: monospace;
+        }
+        .prose pre {
+            background-color: #f3f4f6;
+            padding: 1em;
+            border-radius: 0.5em;
+            margin: 1em 0;
+            overflow-x: auto;
+        }
+        .prose pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        .prose blockquote {
+            border-left: 4px solid #e5e7eb;
+            padding-left: 1em;
+            margin: 1em 0;
+            color: #4b5563;
+        }
+    </style>
     <script>
         function sendMessage() {
             const questionInput = document.getElementById('questionInput');
@@ -41,7 +93,7 @@
                 // Add AI response to chat
                 chatMessages.innerHTML += `
                     <div class="flex justify-start mb-4">
-                        <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]">
+                        <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4 max-w-[80%] prose prose-sm">
                             ${data.message}
                         </div>
                     </div>
@@ -67,8 +119,8 @@
                 </div>
                 <!-- Answer -->
                 <div class="flex justify-start mb-4">
-                    <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]">
-                        {{ message[1] }}
+                    <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4 max-w-[80%] prose prose-sm">
+                        {{ message[1]|safe }}
                     </div>
                 </div>
             {% endfor %}

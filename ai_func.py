@@ -13,36 +13,85 @@ def get_ai_response(user_question, ai_help_level, assignment_id, student_name=No
     mark_scheme_file_path = file_paths[1]
     resources_file_paths = file_paths[2:] if len(file_paths) > 2 else []
     
-    # Create initial system message
+    # Get student uploads if available
+    student_uploads = get_student_uploads(assignment_id, student_name) if student_name else []
+    
+    # Create initial system message with clearer context and stricter help levels
     system_message = (
-        "You are a teacher AI assistant. Your role is to answer students' questions about their homework, "
-        "using the mark scheme and resources provided. You should maintain consistency with your previous "
-        "answers in the conversation and build upon previous explanations when appropriate."
+        "You are a teacher AI assistant. Format all responses in markdown for better readability. "
+        "Use headers (##), bullet points, numbered lists, and other markdown features to structure your responses clearly. "
+        "Always use line breaks between sections for clarity.\n\n"
+        "Your role is to guide students towards understanding without providing direct solutions. "
+        "\n\nHelp Level Guidelines (strictly follow these):"
+        "\n\n10: Ask only Socratic questions to help students discover the path themselves."
+        "\nExample: 'What do you think happens when...?' or 'Can you identify the key elements in...?'"
+        
+        "\n\n7-9: Provide general conceptual reminders and ask guiding questions."
+        "\nExample: 'Remember that when dealing with X, we usually consider Y. What might that suggest here?'"
+        
+        "\n\n4-6: Give a structured approach without specific hints."
+        "\nExample: 'Here are some key points to consider:"
+        "\n- Review the relationship between X and Y"
+        "\n- Consider the conditions given"
+        "\n- Think about similar problems you've solved'"
+        
+        "\n\n1-3: Only validate student's own understanding or provide basic factual information."
+        "\nExample: 'Yes, that formula is correct' or 'This type of problem typically involves [basic concept]'"
+        
+        "\n\nCritical Rules:"
+        "\n1. Never reveal solutions or key steps"
+        "\n2. Never mention the help level or mark scheme"
+        "\n3. Lower help levels (1-3) should feel almost frustratingly unhelpful"
+        "\n4. Higher help levels should still require significant student effort"
+        "\n5. Focus on process and understanding, not answers"
+        "\n6. If a student seems stuck, prioritize asking what they've tried so far"
     )
     
-    # Create file content array
+    # Create file content array with clear section markers
     content = [{
         "type": "text", 
-        "text": f"Based on a rating of {ai_help_level} out of 10 for how much you should help, "
-                f"and even at 10 you should not be giving the whole answer, please answer: {user_question}\n\n"
-                f"The first file is the homework questions, the second is the mark scheme, "
-                f"followed by any additional resources."
+        "text": (
+            f"Help Level: {ai_help_level}/10 (where 10 still requires student effort)\n"
+            f"Student Question: {user_question}\n\n"
+            f"=== TEACHER PROVIDED MATERIALS ===\n"
+            f"Below are the official assignment materials provided by your teacher:\n"
+        )
     }]
     
-    # Add file contents
+    # Add teacher materials with labels
+    content.append({"type": "text", "text": "QUESTION PAPER:"})
     content.append(get_file_content(question_file_path))
-    content.append(get_file_content(mark_scheme_file_path))
-    for file_path in resources_file_paths:
-        content.append(get_file_content(file_path))
     
-    # Get conversation history if student_name is provided
+    content.append({"type": "text", "text": "\nMARK SCHEME:"})
+    content.append(get_file_content(mark_scheme_file_path))
+    
+    if resources_file_paths:
+        content.append({"type": "text", "text": "\nADDITIONAL RESOURCES:"})
+        for file_path in resources_file_paths:
+            content.append(get_file_content(file_path))
+    
+    # Add student materials if available
+    if student_uploads:
+        content.append({
+            "type": "text", 
+            "text": "\n=== STUDENT SUBMITTED WORK ===\nBelow are the materials you have submitted so far:"
+        })
+        for upload in student_uploads:
+            content.append(get_file_content(upload))
+    
+    # Get conversation history
     messages = []
     if student_name:
         from app import get_chat_history  # Import here to avoid circular import
         chat_history = get_chat_history(student_name, assignment_id)
-        messages.extend(chat_history['conversation'])
+        if chat_history['conversation']:
+            content.append({
+                "type": "text",
+                "text": "\n=== PREVIOUS CONVERSATION ===\nHere are your previous questions and my answers:"
+            })
+            messages.extend(chat_history['conversation'])
     
-    # Add current question
+    # Add current question with context
     messages.append({
         "role": "user",
         "content": content
@@ -124,3 +173,18 @@ def get_file_content(file_path):
                 "type": "text",
                 "text": f"File {Path(file_path).name} is a binary file and cannot be processed directly."
             }
+
+def get_student_uploads(assignment_id, student_name):
+    """Get all files uploaded by a student for a specific assignment"""
+    query = """
+    SELECT file_path FROM student_uploads 
+    WHERE assignment_id = ? AND student_name = ?
+    ORDER BY timestamp ASC;
+    """
+    
+    with sqlite3.connect('my_database.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (assignment_id, student_name))
+        file_paths = [row[0] for row in cursor.fetchall()]
+    
+    return file_paths

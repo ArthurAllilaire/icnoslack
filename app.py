@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_from_directory
+from markupsafe import Markup
 import os
 import createAssignment as ca
 import sqlite3
 from ai_func import get_ai_response
 from datetime import datetime
+import markdown
+from markdown.extensions.extra import ExtraExtension
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -210,7 +213,11 @@ def studentHelp():
         
         # Get AI response with conversation history
         ai_response = get_ai_response(question, ai_help_level, assignment_id, student_name)[0]
-        response_text = ai_response.text
+        # Use markdown with extensions for better parsing
+        response_text = markdown.markdown(
+            ai_response.text,
+            extensions=['extra', 'nl2br', 'sane_lists']
+        )
         
         # Store chat in database
         conn = sqlite3.connect('my_database.db')
@@ -249,7 +256,10 @@ def chat_message():
     
     ai_help_level = get_assignment_help_level(assignment_id)
     ai_response = get_ai_response(question, ai_help_level, assignment_id, student_name)[0]
-    response_text = ai_response.text
+    response_text = markdown.markdown(
+        ai_response.text,
+        extensions=['extra', 'nl2br', 'sane_lists']
+    )
     
     conn = sqlite3.connect('my_database.db')
     cursor = conn.cursor()
