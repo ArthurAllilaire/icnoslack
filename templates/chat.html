@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function sendMessage() {
+            const questionInput = document.getElementById('questionInput');
+            const question = questionInput.value.trim();
+            
+            if (question === '') return;
+            
+            // Add user message to chat
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += `
+                <div class="flex justify-end mb-4">
+                    <div class="bg-blue-500 text-white rounded-lg py-2 px-4 max-w-[80%]">
+                        ${question}
+                    </div>
+                </div>
+            `;
+            
+            // Clear input
+            questionInput.value = '';
+            
+            // Send to server
+            fetch('{{ url_for("chat_message") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'assignmentId': '{{ assignment_id }}',
+                    'question': question
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Add AI response to chat
+                chatMessages.innerHTML += `
+                    <div class="flex justify-start mb-4">
+                        <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]">
+                            ${data.message}
+                        </div>
+                    </div>
+                `;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
+    </script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4">
+    <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-4xl h-[800px] flex flex-col">
+        <h1 class="text-3xl font-bold mb-4">AI Chat Assistant</h1>
+        <p class="text-gray-600 mb-4">Help level: {{ ai_help_level }}/10</p>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 mb-4">
+            {% for message in chat_history %}
+                <!-- Question -->
+                <div class="flex justify-end mb-4">
+                    <div class="bg-blue-500 text-white rounded-lg py-2 px-4 max-w-[80%]">
+                        {{ message[0] }}
+                    </div>
+                </div>
+                <!-- Answer -->
+                <div class="flex justify-start mb-4">
+                    <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]">
+                        {{ message[1] }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Chat Input -->
+        <div class="flex space-x-4">
+            <input type="text" id="questionInput" 
+                   class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                   placeholder="Type your question here..."
+                   onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">
+                Send
+            </button>
+        </div>
+
+        <!-- Back to Assignments -->
+        <div class="mt-4 text-center">
+            <a href="{{ url_for('student') }}" 
+               class="text-blue-500 hover:text-blue-600 transition duration-300">
+                ← Back to Assignments
+            </a>
+        </div>
+    </div>
+</body>
+</html>

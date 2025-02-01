@@ -5,87 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Page</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                alert(`You selected the file: ${file.name}`);
-            } else {
-                alert("No file selected.");
-            }
-        }
-
-        function submitQuestion() {
-            const question = document.getElementById("aiQuestion").value.trim();
-
-            if (question === "") {
-                alert("Please ask a question before submitting.");
-                return;
-            }
-
-            alert(`You asked: "${question}"`);
-            console.log("Question sent to AI:", question);
-            document.getElementById("aiQuestion").value = "";
-        }
-    </script>
 </head>
-<body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-
-    <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
-        <h1 id="greeting" class="text-3xl font-bold mb-4">Welcome, {{ student_name }}!</h1>
-        <p class="text-lg mb-6">This is the student page where you can upload your answers and ask AI for help.</p>
-
-        <!-- Display Assignments -->
-        <h2 class="text-xl font-semibold mb-2">📜 Available Assignments</h2>
-        <div id="assignmentsList" class="space-y-4">
-            <form id="assignmentForm" action="/upload" method="POST" enctype="multipart/form-data" class="space-y-4">
+<body class="min-h-screen bg-gradient-to-r from-blue-500 to-purple-500">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4 text-white text-center">Welcome, {{ student_name }}!</h1>
+        
+        <div class="flex gap-6">
+            <!-- Scrollable Assignment List -->
+            <div class="w-1/3 bg-white rounded-2xl shadow-lg p-4 h-[800px] overflow-y-auto">
+                <h2 class="text-xl font-semibold mb-4 sticky top-0 bg-white pb-2 border-b">📜 Available Assignments</h2>
                 <div class="space-y-4">
                     {% for assignment in assignments %}
                         <div class="p-4 bg-gray-100 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800">Assignment {{ loop.index }}: {{ assignment.name }}</h3>
-                            <p class="text-gray-600">📄 Task Description: {{ assignment.taskDescription }}</p>
-                            <p class="text-gray-600">📂 Question File: <a href="{{ url_for('uploaded_file', filename=assignment.questionFile.split('/')[-1]) }}" class="text-blue-500 underline" download>{{ assignment.questionFile }}</a></p>
-                            <p class="text-gray-600">📑 Markscheme File: <a href="{{ url_for('uploaded_file', filename=assignment.markschemeFile.split('/')[-1]) }}" class="text-blue-500 underline" download>{{ assignment.markschemeFile }}</a></p>
-                            <p class="text-gray-600">📚 Resource Files: 
-                                {% for file in assignment.resourceFiles %}
-                                    <a href="{{ url_for('uploaded_file', filename=file.split('/')[-1]) }}" class="text-blue-500 underline" download>{{ file }}</a>{% if not loop.last %}, {% endif %}
-                                {% endfor %}
-                            </p>
-                            <p class="text-gray-600">🤖 AI Help Level: <span class="font-semibold">{{ assignment.aiHelpLevel }}</span></p>
-                            <input type="hidden" name="assignmentId" value="{{ assignment.id }}">
+                            <h3 class="text-lg font-bold text-gray-800">{{ assignment.name }}</h3>
+                            <p class="text-gray-600 text-sm mb-2">📄 {{ assignment.taskDescription }}</p>
+                            <div class="space-y-1">
+                                <p class="text-gray-600">
+                                    <a href="{{ url_for('uploaded_file', filename=assignment.questionFile.split('/')[-1]) }}" 
+                                       class="text-blue-500 hover:text-blue-700 text-sm" 
+                                       download>📥 Download Question</a>
+                                </p>
+                                {% if assignment.resourceFiles %}
+                                    <p class="text-gray-600">
+                                        📚 Resources: 
+                                        {% for file in assignment.resourceFiles %}
+                                            <a href="{{ url_for('uploaded_file', filename=file.split('/')[-1]) }}" 
+                                               class="text-blue-500 hover:text-blue-700 text-sm"
+                                               download>Resource {{ loop.index }}</a>{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
+            </div>
 
-                <!-- Upload Answers Section -->
-                <select id="assignmentId" name="assignmentId" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <option value="" disabled selected>Select an assignment</option>
-                    {% for assignment in assignments %}
-                        <option value="{{ assignment.id }}">Assignment {{ loop.index }}: {{ assignment.name }}</option>
-                    {% endfor %}
-                </select>
-                <h2 class="text-xl font-semibold mt-6 mb-2">Upload Your Answers</h2>
-                <input type="file" id="fileInput" name="answerFile" 
-                       accept=".pdf, .doc, .docx, .txt" 
-                       class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2"
-                       onchange="handleFileUpload(event)">
-                <button type="submit" 
-                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
-                    📤 Upload
-                </button>
-            </form>
+            <!-- Form Section -->
+            <div class="w-2/3 bg-white rounded-2xl shadow-lg p-8">
+                <form id="assignmentForm" action="{{ url_for('studentHelp') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Select Assignment</label>
+                        <select id="assignmentId" name="assignmentId" required 
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="" disabled selected>Choose an assignment</option>
+                            {% for assignment in assignments %}
+                                <option value="{{ assignment.id }}">{{ assignment.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold mb-2">Upload Your Working</h2>
+                        <input type="file" id="fileInput" name="answerFile" 
+                               accept=".pdf, .doc, .docx, .txt, .jpg, .jpeg, .png" 
+                               class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold mb-2">Ask the AI a Question</h2>
+                        <textarea id="aiQuestion" name="question" rows="4" 
+                                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" 
+                                  placeholder="Type your question here..."></textarea>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-300">
+                        📤 Submit Question
+                    </button>
+                </form>
+            </div>
         </div>
-
-        <!-- Ask AI Section -->
-        <h2 class="text-xl font-semibold mt-6 mb-2">Ask the AI a Question</h2>
-        <textarea id="aiQuestion" rows="4" 
-                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" 
-                  placeholder="Type your question here..."></textarea>
-        <button onclick="submitQuestion()" 
-                class="mt-4 w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
-            🤖 Submit Question
-        </button>
     </div>
-
 </body>
 </html>

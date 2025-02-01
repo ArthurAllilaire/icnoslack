@@ -27,10 +27,29 @@
             <textarea id="taskDescription" name="taskDescription" rows="4" placeholder="Task Description" required
                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
 
-            <label class="block text-gray-700 font-semibold">📄 Upload Files:</label>
-            <input type="file" id="questionFile" name="questionFile" required class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
-            <input type="file" id="markschemeFile" name="markschemeFile" required class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
-            <input type="file" id="resourceFiles" name="resourceFiles" multiple class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
+            <!-- Question Files Section -->
+            <div class="border-t pt-4">
+                <label class="block text-gray-700 font-semibold mb-2">📝 Question Files (Required)</label>
+                <p class="text-sm text-gray-500 mb-2">Upload the main question file that students will work on</p>
+                <input type="file" id="questionFile" name="questionFile" required 
+                       class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
+            </div>
+
+            <!-- Markscheme Files Section -->
+            <div class="border-t pt-4">
+                <label class="block text-gray-700 font-semibold mb-2">✓ Markscheme Files (Required)</label>
+                <p class="text-sm text-gray-500 mb-2">Upload the marking criteria and solutions</p>
+                <input type="file" id="markschemeFile" name="markschemeFile" required 
+                       class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
+            </div>
+
+            <!-- Resource Files Section -->
+            <div class="border-t pt-4">
+                <label class="block text-gray-700 font-semibold mb-2">📚 Additional Resources (Optional)</label>
+                <p class="text-sm text-gray-500 mb-2">Upload any extra materials to help the AI provide better assistance</p>
+                <input type="file" id="resourceFiles" name="resourceFiles" multiple 
+                       class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
+            </div>
 
             <label class="block text-gray-700 font-semibold">🤖 AI Help Level (0 = No help, 10 = Maximum help):</label>
             <input type="range" id="aiHelpLevel" name="aiHelpLevel" min="0" max="10" step="1" value="5" oninput="updateHelpLevel()" class="w-full">
