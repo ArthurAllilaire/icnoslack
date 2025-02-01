@@ -91,6 +91,12 @@ def student():
 
 @app.route('/studentHelp', methods=['POST'])
 def studentHelp():
+    # get a file called answerFile
+    # get an assignment id
+    # get the right files - upload to the prompt
+    # return that to user as some kind of json
+    # return jsonify({'message': 'Your answer has been submitted!'})
+    # do a second request and store in some database
     question = request.form['question']
     ai_help_level = request.form['aiHelpLevel']
     message = get_ai_response(question, ai_help_level)
