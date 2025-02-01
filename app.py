@@ -155,6 +155,7 @@ def get_assignment_help_level(assignment_id):
     return result[0]
 
 def get_chat_history(student_name, assignment_id):
+    """Returns chat history in two formats: display format and AI conversation format"""
     conn = sqlite3.connect('my_database.db')
     cursor = conn.cursor()
     cursor.execute('''
@@ -165,7 +166,19 @@ def get_chat_history(student_name, assignment_id):
     ''', (student_name, assignment_id))
     history = cursor.fetchall()
     conn.close()
-    return history
+    
+    # Format history for AI context
+    formatted_history = []
+    for q, a, _ in history:  # Ignore timestamp for AI format
+        formatted_history.extend([
+            {"role": "user", "content": q},
+            {"role": "assistant", "content": a}
+        ])
+    
+    return {
+        'display': history,  # For template display
+        'conversation': formatted_history  # For AI context
+    }
 
 @app.route('/studentHelp', methods=['POST'])
 def studentHelp():
@@ -195,12 +208,11 @@ def studentHelp():
             conn.commit()
             conn.close()
         
-        # Get AI response and store chat history
-        ai_response = get_ai_response(question, ai_help_level, assignment_id)[0]
-        
-        # Claude's response comes as a TextBlock, so we access the text attribute
+        # Get AI response with conversation history
+        ai_response = get_ai_response(question, ai_help_level, assignment_id, student_name)[0]
         response_text = ai_response.text
-            
+        
+        # Store chat in database
         conn = sqlite3.connect('my_database.db')
         cursor = conn.cursor()
         cursor.execute('''
@@ -208,7 +220,7 @@ def studentHelp():
         VALUES (?, ?, ?, ?)''', (student_name, assignment_id, question, response_text))
         conn.commit()
         conn.close()
-            
+        
         return redirect(url_for('chat', assignment_id=assignment_id))
     
     except ValueError as e:
@@ -220,7 +232,7 @@ def chat(assignment_id):
     if not student_name:
         return redirect(url_for('studentLogin'))
     
-    chat_history = get_chat_history(student_name, assignment_id)
+    chat_history = get_chat_history(student_name, assignment_id)['display']  # Use display format
     ai_help_level = get_assignment_help_level(assignment_id)
     
     return render_template('chat.html', 
@@ -236,7 +248,7 @@ def chat_message():
     question = request.form['question']
     
     ai_help_level = get_assignment_help_level(assignment_id)
-    ai_response = get_ai_response(question, ai_help_level, assignment_id)[0]
+    ai_response = get_ai_response(question, ai_help_level, assignment_id, student_name)[0]
     response_text = ai_response.text
     
     conn = sqlite3.connect('my_database.db')
