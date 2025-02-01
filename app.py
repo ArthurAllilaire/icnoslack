@@ -126,9 +126,10 @@ def uploadAssignment():
     
     resource_file_paths = []
     for file in resource_files:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{assignmentId}_{file.filename}")
-        file.save(file_path)
-        resource_file_paths.append(file_path)
+        if file.filename:  # Only process files that have a filename
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{assignmentId}_{file.filename}")
+            file.save(file_path)
+            resource_file_paths.append(file_path)
     
     ca.create_files(assignmentId, question_file_path, markscheme_file_path, resource_file_paths)
     
