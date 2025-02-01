@@ -4,9 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Page</title>
+    <script>
+        // Array to store the assignments
+        let assignments = [];
+
+        // Function to handle the assignment creation
+        function createAssignment(event) {
+            event.preventDefault(); // Prevent form submission (page reload)
+
+            // Get the values from the form
+            const assignmentName = document.getElementById("assignmentName").value;
+            const questionFile = document.getElementById("questionFile").files[0];
+            const resourceFiles = document.getElementById("resourceFiles").files;
+            const aiHelpLevel = document.getElementById("aiHelpLevel").value;
+
+            // Check if the assignment name and question file are provided
+            if (!assignmentName || !questionFile) {
+                alert("Please provide an assignment name and a question file.");
+                return;
+            }
+
+            // Create an object to store the assignment details
+            const newAssignment = {
+                name: assignmentName,
+                questionFile: questionFile.name,
+                resourceFiles: Array.from(resourceFiles).map(file => file.name),
+                aiHelpLevel: aiHelpLevel
+            };
+
+            // Add the new assignment to the assignments array
+            assignments.push(newAssignment);
+
+            // Display the assignments on the page
+            displayAssignments();
+
+            // Clear the form fields after submission
+            document.getElementById("assignmentForm").reset();
+        }
+
+        // Function to display the list of assignments
+        function displayAssignments() {
+            const assignmentsList = document.getElementById("assignmentsList");
+            assignmentsList.innerHTML = ""; // Clear current list
+
+            // Loop through the assignments array and display each assignment
+            assignments.forEach((assignment, index) => {
+                const assignmentDiv = document.createElement("div");
+                assignmentDiv.classList.add("assignment");
+                assignmentDiv.innerHTML = `
+                    <h3>Assignment ${index + 1}: ${assignment.name}</h3>
+                    <p>Question File: <a href="#" onclick="alert('Downloading: ${assignment.questionFile}')">${assignment.questionFile}</a></p>
+                    <p>Resource Files: ${assignment.resourceFiles.map(file => 
+                        `<a href="#" onclick="alert('Downloading: ${file}')">${file}</a>`).join(", ")}</p>
+                    <p>AI Help Level: ${assignment.aiHelpLevel}</p>
+                    <button onclick="deleteAssignment(${index})">Delete Assignment</button>
+                `;
+                assignmentsList.appendChild(assignmentDiv);
+            });
+        }
+
+        // Function to update the display of the help level as the slider is moved
+        function updateHelpLevel() {
+            const helpLevel = document.getElementById("aiHelpLevel").value;
+            document.getElementById("helpLevelDisplay").innerText = helpLevel;
+        }
+
+        // Function to delete an assignment by index
+        function deleteAssignment(index) {
+            // Remove the assignment from the array
+            assignments.splice(index, 1);
+
+            // Re-render the assignments list
+            displayAssignments();
+        }
+    </script>
 </head>
 <body>
     <h1>Welcome, Teacher!</h1>
-    <p>This is the teacher page.</p>
+    <p>This is the teacher page where you can create and manage assignments.</p>
+
+    <h2>Create a New Assignment</h2>
+    <form id="assignmentForm" onsubmit="createAssignment(event)">
+        <label for="assignmentName">Assignment Name:</label><br>
+        <input type="text" id="assignmentName" name="assignmentName" required><br><br>
+
+        <label for="questionFile">Question File:</label><br>
+        <input type="file" id="questionFile" name="questionFile" required><br><br>
+
+        <label for="resourceFiles">Resource Files (optional):</label><br>
+        <input type="file" id="resourceFiles" name="resourceFiles" multiple><br><br>
+
+        <label for="aiHelpLevel">AI Help Level (0 = No help, 10 = Maximum help):</label><br>
+        <input type="range" id="aiHelpLevel" name="aiHelpLevel" min="0" max="10" step="1" value="5" oninput="updateHelpLevel()">
+        <span id="helpLevelDisplay">5</span><br><br>
+
+        <button type="submit">Create Assignment</button>
+    </form>
+
+    <h2>Created Assignments</h2>
+    <div id="assignmentsList"></div>
+
 </body>
 </html>

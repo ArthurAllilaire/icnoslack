@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Enter Name Page</title>
+    <script>
+        function redirectToStudentPage() {
+            // Get the entered name from the input field
+            var studentName = document.getElementById("studentName").value;
+            
+            // Check if the name field is empty
+            if (studentName.trim() === "") {
+                alert("Please enter your name.");
+                return;
+            }
+            
+            // Redirect to the student page with the student's name
+            window.location.href = "student?name=" + encodeURIComponent(studentName);
+        }
+    </script>
+</head>
+<body>
+    <h1>Welcome to the Homework Assistant</h1>
+    <p>Please enter your name to proceed:</p>
+    
+    <input type="text" id="studentName" placeholder="Enter your name" required>
+    <button onclick="redirectToStudentPage()">Submit</button>
+</body>
+</html>

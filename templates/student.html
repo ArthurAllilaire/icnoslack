@@ -4,9 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Page</title>
+    <script>
+        window.onload = function() {
+            // Get the URL parameter for the student's name
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentName = urlParams.get('name');
+            
+            // If a name is found, update the greeting message
+            if (studentName) {
+                document.getElementById('greeting').innerText = `Welcome, ${studentName}!`;
+            } else {
+                // If no name is found (invalid URL), alert the user
+                alert("No name found. Please enter your name.");
+                window.location.href = "index.html"; // Redirect back to the name entry page
+            }
+        };
+
+        // Function to handle file upload (for demo purposes)
+        function handleFileUpload(event) {
+            const file = event.target.files[0]; // Get the selected file
+
+            if (file) {
+                alert(`You selected the file: ${file.name}`);
+            } else {
+                alert("No file selected.");
+            }
+        }
+
+        // Function to handle the AI question submission
+        function submitQuestion() {
+            const question = document.getElementById("aiQuestion").value;
+
+            if (question.trim() === "") {
+                alert("Please ask a question before submitting.");
+                return;
+            }
+
+            // Simulate sending the question to the AI backend
+            alert(`You asked: "${question}"`);
+
+            // Here, you would normally send the question to the AI backend (e.g., using fetch or an AJAX call)
+            // For now, we just log it as a demo
+            console.log("Question sent to AI:", question);
+
+            // Clear the input field after submitting
+            document.getElementById("aiQuestion").value = "";
+        }
+    </script>
 </head>
 <body>
-    <h1>Welcome, Student!</h1>
-    <p>This is the student page.</p>
+    <h1 id="greeting">Welcome, Student!</h1>
+    <p>This is the student page where you can access homework questions and ask for help.</p>
+
+    <h2>Upload Your Answers</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="fileInput">Select your answer file (e.g., PDF, Word, etc.):</label><br><br>
+        <input type="file" id="fileInput" name="answerFile" accept=".pdf, .doc, .docx, .txt" onchange="handleFileUpload(event)">
+        <br><br>
+        <button type="submit">Upload</button>
+    </form>
+
+    <h2>Ask the AI a Question</h2>
+    <textarea id="aiQuestion" rows="4" cols="50" placeholder="Type your question here..."></textarea><br><br>
+    <button onclick="submitQuestion()">Submit Question</button>
 </body>
 </html>
