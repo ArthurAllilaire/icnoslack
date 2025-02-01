@@ -49,11 +49,11 @@
                 <div class="p-4 bg-gray-100 rounded-lg shadow-md">
                     <h3 class="text-lg font-bold text-gray-800">Assignment {{ loop.index }}: {{ assignment.name }}</h3>
                     <p class="text-gray-600">📄 Task Description: {{ assignment.taskDescription }}</p>
-                    <p class="text-gray-600">📂 Question File: <a href="#" class="text-blue-500 underline">{{ assignment.questionFile }}</a></p>
-                    <p class="text-gray-600">📑 Markscheme File: <a href="#" class="text-blue-500 underline">{{ assignment.markschemeFile }}</a></p>
+                    <p class="text-gray-600">📂 Question File: <a href="{{ url_for('uploaded_file', filename=assignment.questionFile.split('/')[-1]) }}" class="text-blue-500 underline">{{ assignment.questionFile }}</a></p>
+                    <p class="text-gray-600">📑 Markscheme File: <a href="{{ url_for('uploaded_file', filename=assignment.markschemeFile.split('/')[-1]) }}" class="text-blue-500 underline">{{ assignment.markschemeFile }}</a></p>
                     <p class="text-gray-600">📚 Resource Files: 
                         {% for file in assignment.resourceFiles %}
-                            <a href="#" class="text-blue-500 underline">{{ file }}</a>{% if not loop.last %}, {% endif %}
+                            <a href="{{ url_for('uploaded_file', filename=file.split('/')[-1]) }}" class="text-blue-500 underline">{{ file }}</a>{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     </p>
                     <p class="text-gray-600">🤖 AI Help Level: <span class="font-semibold">{{ assignment.aiHelpLevel }}</span></p>

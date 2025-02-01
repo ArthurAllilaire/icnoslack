@@ -1,10 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_from_directory
 import os
 import createAssignment as ca
 import sqlite3
 from ai_func import get_ai_response
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+# Set the upload folder globally
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def create_assignment_table() -> bool:
     # Connect to the SQLite database
@@ -81,27 +86,28 @@ def get_assignments():
 def home():
     return render_template('home.html')
 
-@app.route('/studentLogin')
+@app.route('/studentLogin', methods=['GET', 'POST'])
 def studentLogin():
+    if request.method == 'POST':
+        student_name = request.form['studentName']
+        session['student_name'] = student_name
+        return redirect(url_for('student'))
     return render_template('studentLogin.html')
 
 @app.route('/student')
 def student():
-    return render_template('student.html')
+    student_name = session.get('student_name')
+    if not student_name:
+        return redirect(url_for('studentLogin'))
+    assignments = get_assignments()
+    return render_template('student.html', student_name=student_name, assignments=assignments)
 
 @app.route('/studentHelp', methods=['POST'])
 def studentHelp():
-    # get a file called answerFile
-    # get an assignment id
-    # get the right files - upload to the prompt
-    # return that to user as some kind of json
-    # return jsonify({'message': 'Your answer has been submitted!'})
-    # do a second request and store in some database
     question = request.form['question']
     ai_help_level = request.form['aiHelpLevel']
     message = get_ai_response(question, ai_help_level)
     return jsonify({'message': message})
-
 
 @app.route('/teacher')
 def teacher():
@@ -120,9 +126,7 @@ def uploadAssignment():
     assignmentId = str(ca.create_assignment(assignment_name, task_description, ai_help_level))
     ca.create_files
     
-    UPLOAD_FOLDER = 'uploads'  # Set a folder where the uploaded files will be stored
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Create uploads directory if it doesn't exist
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Create uploads directory if it doesn't exist
     
     question_file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{assignmentId}_{question_file.filename}")
     question_file.save(question_file_path)
@@ -141,6 +145,25 @@ def uploadAssignment():
     
     # Redirect back to the main teacher page
     return redirect(url_for('teacher'))
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    assignment_id = request.form['assignmentId']
+    answer_file = request.files['answerFile']
+    
+    answer_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'answers')
+    os.makedirs(answer_folder, exist_ok=True)  # Create answers directory if it doesn't exist
+    
+    answer_file_path = os.path.join(answer_folder, f"{assignment_id}_{answer_file.filename}")
+    answer_file.save(answer_file_path)
+    
+    # You can add code here to save the answer file information to the database if needed
+    
+    return redirect(url_for('student'))
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
