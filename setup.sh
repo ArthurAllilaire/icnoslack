@@ -7,6 +7,6 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install Flask
-pip install Flask
+pip install -r requirements.txt
 
 echo "Flask has been installed in the virtual environment."
