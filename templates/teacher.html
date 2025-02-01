@@ -6,6 +6,7 @@
     <title>Teacher Page</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+<<<<<<< HEAD
         let assignments = [];
 
         function createAssignment(event) {
@@ -64,11 +65,17 @@
         function deleteAssignment(index) {
             assignments.splice(index, 1);
             displayAssignments();
+=======
+        function updateHelpLevel() {
+            const helpLevel = document.getElementById('aiHelpLevel').value;
+            document.getElementById('helpLevelDisplay').innerText = helpLevel;
+>>>>>>> c3cf1f2ce69c2d39725ca19178b22cce1681e8c1
         }
     </script>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4">
 
+<<<<<<< HEAD
     <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-2xl">
         <h1 class="text-3xl font-bold mb-4 text-center">👨‍🏫 Teacher Dashboard</h1>
         <p class="text-lg text-center mb-6">Create and manage assignments for your students.</p>
@@ -81,6 +88,24 @@
 
             <input type="file" id="questionFile" required
                    class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
+=======
+    <h2>Create a New Assignment</h2>
+    <form action="{{ url_for('uploadAssignment') }}" method="POST" enctype="multipart/form-data">
+        <label for="assignmentName">Assignment Name:</label><br>
+        <input type="text" id="assignmentName" name="assignmentName" required><br><br>
+
+        <label for="taskDescription">Task Description:</label><br>
+        <textarea id="taskDescription" name="taskDescription" rows="4" cols="50"></textarea><br><br>
+
+        <label for="questionFile">Question File:</label><br>
+        <input type="file" id="questionFile" name="questionFile" required><br><br>
+
+        <label for="markschemeFile">Markscheme File:</label><br>
+        <input type="file" id="markschemeFile" name="markschemeFile" required><br><br>
+
+        <label for="resourceFiles">Resource Files (optional):</label><br>
+        <input type="file" id="resourceFiles" name="resourceFiles" multiple><br><br>
+>>>>>>> c3cf1f2ce69c2d39725ca19178b22cce1681e8c1
 
             <input type="file" id="resourceFiles" multiple
                    class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
@@ -89,6 +114,7 @@
             <input type="range" id="aiHelpLevel" min="0" max="10" step="1" value="5" oninput="updateHelpLevel()" class="w-full">
             <p class="text-center text-gray-700">Help Level: <span id="helpLevelDisplay" class="font-semibold">5</span></p>
 
+<<<<<<< HEAD
             <button type="submit" 
                     class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
                 ➕ Create Assignment
@@ -100,5 +126,22 @@
         <div id="assignmentsList" class="space-y-4"></div>
     </div>
 
+=======
+    <h2>Created Assignments</h2>
+    <div id="assignmentsList">
+        {% for assignment in assignments %}
+            <div class="assignment">
+                <h3>Assignment {{ loop.index }}: {{ assignment.name }}</h3>
+                <p>Task Description: {{ assignment.taskDescription }}</p>
+                <p>Question File: <a href="#">{{ assignment.questionFile }}</a></p>
+                <p>Markscheme File: <a href="#">{{ assignment.markschemeFile }}</a></p>
+                <p>Resource Files: {% for file in assignment.resourceFiles %}
+                    <a href="#">{{ file }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}</p>
+                <p>AI Help Level: {{ assignment.aiHelpLevel }}</p>
+            </div>
+        {% endfor %}
+    </div>
+>>>>>>> c3cf1f2ce69c2d39725ca19178b22cce1681e8c1
 </body>
 </html>
