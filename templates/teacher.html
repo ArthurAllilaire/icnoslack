@@ -4,27 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Array to store the assignments
         let assignments = [];
 
-        // Function to handle the assignment creation
         function createAssignment(event) {
-            event.preventDefault(); // Prevent form submission (page reload)
+            event.preventDefault();
 
-            // Get the values from the form
             const assignmentName = document.getElementById("assignmentName").value;
             const questionFile = document.getElementById("questionFile").files[0];
             const resourceFiles = document.getElementById("resourceFiles").files;
             const aiHelpLevel = document.getElementById("aiHelpLevel").value;
 
-            // Check if the assignment name and question file are provided
             if (!assignmentName || !questionFile) {
                 alert("Please provide an assignment name and a question file.");
                 return;
             }
 
-            // Create an object to store the assignment details
             const newAssignment = {
                 name: assignmentName,
                 questionFile: questionFile.name,
@@ -32,77 +28,77 @@
                 aiHelpLevel: aiHelpLevel
             };
 
-            // Add the new assignment to the assignments array
             assignments.push(newAssignment);
-
-            // Display the assignments on the page
             displayAssignments();
-
-            // Clear the form fields after submission
             document.getElementById("assignmentForm").reset();
+            updateHelpLevel(); // Reset displayed AI help level
         }
 
-        // Function to display the list of assignments
         function displayAssignments() {
             const assignmentsList = document.getElementById("assignmentsList");
-            assignmentsList.innerHTML = ""; // Clear current list
+            assignmentsList.innerHTML = "";
 
-            // Loop through the assignments array and display each assignment
             assignments.forEach((assignment, index) => {
                 const assignmentDiv = document.createElement("div");
-                assignmentDiv.classList.add("assignment");
+                assignmentDiv.classList.add("p-4", "bg-white", "rounded-lg", "shadow-md", "mb-4");
+
                 assignmentDiv.innerHTML = `
-                    <h3>Assignment ${index + 1}: ${assignment.name}</h3>
-                    <p>Question File: <a href="#" onclick="alert('Downloading: ${assignment.questionFile}')">${assignment.questionFile}</a></p>
-                    <p>Resource Files: ${assignment.resourceFiles.map(file => 
-                        `<a href="#" onclick="alert('Downloading: ${file}')">${file}</a>`).join(", ")}</p>
-                    <p>AI Help Level: ${assignment.aiHelpLevel}</p>
-                    <button onclick="deleteAssignment(${index})">Delete Assignment</button>
+                    <h3 class="text-lg font-bold text-gray-800">Assignment ${index + 1}: ${assignment.name}</h3>
+                    <p class="text-gray-600">📄 Question File: <a href="#" class="text-blue-500 underline" onclick="alert('Downloading: ${assignment.questionFile}')">${assignment.questionFile}</a></p>
+                    <p class="text-gray-600">📚 Resource Files: ${assignment.resourceFiles.length > 0 ? assignment.resourceFiles.map(file => 
+                        `<a href="#" class="text-blue-500 underline" onclick="alert('Downloading: ${file}')">${file}</a>`).join(", ") : "None"}</p>
+                    <p class="text-gray-600">🤖 AI Help Level: <span class="font-semibold">${assignment.aiHelpLevel}</span></p>
+                    <button onclick="deleteAssignment(${index})" 
+                            class="mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                        🗑️ Delete
+                    </button>
                 `;
                 assignmentsList.appendChild(assignmentDiv);
             });
         }
 
-        // Function to update the display of the help level as the slider is moved
         function updateHelpLevel() {
-            const helpLevel = document.getElementById("aiHelpLevel").value;
-            document.getElementById("helpLevelDisplay").innerText = helpLevel;
+            document.getElementById("helpLevelDisplay").innerText = document.getElementById("aiHelpLevel").value;
         }
 
-        // Function to delete an assignment by index
         function deleteAssignment(index) {
-            // Remove the assignment from the array
             assignments.splice(index, 1);
-
-            // Re-render the assignments list
             displayAssignments();
         }
     </script>
 </head>
-<body>
-    <h1>Welcome, Teacher!</h1>
-    <p>This is the teacher page where you can create and manage assignments.</p>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4">
 
-    <h2>Create a New Assignment</h2>
-    <form id="assignmentForm" onsubmit="createAssignment(event)">
-        <label for="assignmentName">Assignment Name:</label><br>
-        <input type="text" id="assignmentName" name="assignmentName" required><br><br>
+    <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-3xl font-bold mb-4 text-center">👨‍🏫 Teacher Dashboard</h1>
+        <p class="text-lg text-center mb-6">Create and manage assignments for your students.</p>
 
-        <label for="questionFile">Question File:</label><br>
-        <input type="file" id="questionFile" name="questionFile" required><br><br>
+        <!-- Create Assignment Form -->
+        <h2 class="text-xl font-semibold mb-2">📌 Create a New Assignment</h2>
+        <form id="assignmentForm" onsubmit="createAssignment(event)" class="space-y-4">
+            <input type="text" id="assignmentName" placeholder="Assignment Name" required
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
 
-        <label for="resourceFiles">Resource Files (optional):</label><br>
-        <input type="file" id="resourceFiles" name="resourceFiles" multiple><br><br>
+            <input type="file" id="questionFile" required
+                   class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
 
-        <label for="aiHelpLevel">AI Help Level (0 = No help, 10 = Maximum help):</label><br>
-        <input type="range" id="aiHelpLevel" name="aiHelpLevel" min="0" max="10" step="1" value="5" oninput="updateHelpLevel()">
-        <span id="helpLevelDisplay">5</span><br><br>
+            <input type="file" id="resourceFiles" multiple
+                   class="w-full text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2">
 
-        <button type="submit">Create Assignment</button>
-    </form>
+            <label class="block text-gray-700 font-semibold">🤖 AI Help Level (0 = No help, 10 = Maximum help):</label>
+            <input type="range" id="aiHelpLevel" min="0" max="10" step="1" value="5" oninput="updateHelpLevel()" class="w-full">
+            <p class="text-center text-gray-700">Help Level: <span id="helpLevelDisplay" class="font-semibold">5</span></p>
 
-    <h2>Created Assignments</h2>
-    <div id="assignmentsList"></div>
+            <button type="submit" 
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                ➕ Create Assignment
+            </button>
+        </form>
+
+        <!-- Display Assignments -->
+        <h2 class="text-xl font-semibold mt-6 mb-2">📜 Created Assignments</h2>
+        <div id="assignmentsList" class="space-y-4"></div>
+    </div>
 
 </body>
 </html>

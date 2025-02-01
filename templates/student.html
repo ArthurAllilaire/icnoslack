@@ -4,26 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         window.onload = function() {
-            // Get the URL parameter for the student's name
             const urlParams = new URLSearchParams(window.location.search);
             const studentName = urlParams.get('name');
-            
-            // If a name is found, update the greeting message
+
             if (studentName) {
                 document.getElementById('greeting').innerText = `Welcome, ${studentName}!`;
             } else {
-                // If no name is found (invalid URL), alert the user
                 alert("No name found. Please enter your name.");
-                window.location.href = "index.html"; // Redirect back to the name entry page
+                window.location.href = "index.html";
             }
         };
 
-        // Function to handle file upload (for demo purposes)
         function handleFileUpload(event) {
-            const file = event.target.files[0]; // Get the selected file
-
+            const file = event.target.files[0];
             if (file) {
                 alert(`You selected the file: ${file.name}`);
             } else {
@@ -31,41 +27,49 @@
             }
         }
 
-        // Function to handle the AI question submission
         function submitQuestion() {
-            const question = document.getElementById("aiQuestion").value;
+            const question = document.getElementById("aiQuestion").value.trim();
 
-            if (question.trim() === "") {
+            if (question === "") {
                 alert("Please ask a question before submitting.");
                 return;
             }
 
-            // Simulate sending the question to the AI backend
             alert(`You asked: "${question}"`);
-
-            // Here, you would normally send the question to the AI backend (e.g., using fetch or an AJAX call)
-            // For now, we just log it as a demo
             console.log("Question sent to AI:", question);
-
-            // Clear the input field after submitting
             document.getElementById("aiQuestion").value = "";
         }
     </script>
 </head>
-<body>
-    <h1 id="greeting">Welcome, Student!</h1>
-    <p>This is the student page where you can access homework questions and ask for help.</p>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white">
 
-    <h2>Upload Your Answers</h2>
-    <form action="/upload" method="POST" enctype="multipart/form-data">
-        <label for="fileInput">Select your answer file (e.g., PDF, Word, etc.):</label><br><br>
-        <input type="file" id="fileInput" name="answerFile" accept=".pdf, .doc, .docx, .txt" onchange="handleFileUpload(event)">
-        <br><br>
-        <button type="submit">Upload</button>
-    </form>
+    <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
+        <h1 id="greeting" class="text-3xl font-bold mb-4">Welcome, Student!</h1>
+        <p class="text-lg mb-6">This is the student page where you can upload your answers and ask AI for help.</p>
 
-    <h2>Ask the AI a Question</h2>
-    <textarea id="aiQuestion" rows="4" cols="50" placeholder="Type your question here..."></textarea><br><br>
-    <button onclick="submitQuestion()">Submit Question</button>
+        <!-- Upload Answers Section -->
+        <h2 class="text-xl font-semibold mb-2">Upload Your Answers</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="file" id="fileInput" name="answerFile" 
+                   accept=".pdf, .doc, .docx, .txt" 
+                   class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer p-2"
+                   onchange="handleFileUpload(event)">
+            <button type="submit" 
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                📤 Upload
+            </button>
+        </form>
+
+        <!-- Ask AI Section -->
+        <h2 class="text-xl font-semibold mt-6 mb-2">Ask the AI a Question</h2>
+        <textarea id="aiQuestion" rows="4" 
+                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" 
+                  placeholder="Type your question here..."></textarea>
+        <button onclick="submitQuestion()" 
+                class="mt-4 w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+            🤖 Submit Question
+        </button>
+    </div>
+
 </body>
 </html>

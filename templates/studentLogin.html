@@ -3,28 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Enter Name Page</title>
+    <title>Enter Your Name</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         function redirectToStudentPage() {
-            // Get the entered name from the input field
-            var studentName = document.getElementById("studentName").value;
+            var studentName = document.getElementById("studentName").value.trim();
             
-            // Check if the name field is empty
-            if (studentName.trim() === "") {
+            if (studentName === "") {
                 alert("Please enter your name.");
                 return;
             }
             
-            // Redirect to the student page with the student's name
             window.location.href = "student?name=" + encodeURIComponent(studentName);
         }
     </script>
 </head>
-<body>
-    <h1>Welcome to the Homework Assistant</h1>
-    <p>Please enter your name to proceed:</p>
-    
-    <input type="text" id="studentName" placeholder="Enter your name" required>
-    <button onclick="redirectToStudentPage()">Submit</button>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+
+    <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
+        <h1 class="text-3xl font-bold mb-4">Homework Assistant</h1>
+        <p class="text-lg mb-6">Please enter your name to proceed:</p>
+        
+        <input type="text" id="studentName" 
+               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+               placeholder="Enter your name" required>
+        
+        <button onclick="redirectToStudentPage()" 
+                class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+            🚀 Submit
+        </button>
+    </div>
+
 </body>
 </html>
