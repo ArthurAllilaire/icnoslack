@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4">
+
+    <div class="space-y-4 bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-3xl font-bold mb-4 text-center">📚 {{ assignment_name }}</h1>
+        <p class="text-lg text-gray-600 text-center mb-6">{{ assignment_description }}</p>
+
+        <h2 class="text-xl font-semibold mb-2">👩‍🎓 Students Who Accessed This Assignment</h2>
+        <div class="space-y-2">
+            {% for student in students %}
+                <a href="{{ url_for('student_chat_history', assignment_id=assignment_id, student_name=student) }}"
+                   class="block p-3 bg-gray-100 rounded-lg shadow-md text-blue-500 font-semibold text-center hover:bg-gray-200 transition duration-300">
+                    {{ student }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <button onclick="window.history.back();" 
+            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+            ← Back to Assignments
+        </button>
+    </div>
+
+</body>
+</html>

@@ -81,6 +81,9 @@
                         {% endfor %}
                     </p>
                     <p class="text-gray-600">🤖 AI Help Level: <span class="font-semibold">{{ assignment.aiHelpLevel }}</span></p>
+                    <a href="{{ url_for('assignment_details', assignment_id=assignment.id) }}" class="mt-4 block inline-block bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                        Assignment details
+                    </a>
                 </div>
             {% endfor %}
         </div>

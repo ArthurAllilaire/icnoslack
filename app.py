@@ -329,5 +329,35 @@ def upload():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/assignment/<int:assignment_id>')
+def assignment_details(assignment_id):
+    """Shows assignment details and students who accessed it."""
+    conn = sqlite3.connect('my_database.db')
+    cursor = conn.cursor()
+
+    # Get assignment details
+    cursor.execute('SELECT assignment_name, assignment_description FROM assignments WHERE id = ?', (assignment_id,))
+    assignment = cursor.fetchone()
+
+    # Get students who accessed this assignment
+    cursor.execute('''
+    SELECT DISTINCT student_name 
+    FROM chat_history 
+    WHERE assignment_id = ? 
+    ORDER BY student_name
+    ''', (assignment_id,))
+    
+    students = [row[0] for row in cursor.fetchall()]
+    
+    conn.close()
+
+    if not assignment:
+        return "Assignment not found", 404
+
+    return render_template('assignment_details.html', assignment_id=assignment_id, 
+                           assignment_name=assignment[0], 
+                           assignment_description=assignment[1], 
+                           students=students)
+
 if __name__ == '__main__':
     app.run(debug=True)
