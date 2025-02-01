@@ -2,10 +2,50 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 import createAssignment as ca
 import sqlite3
+from ai_func import get_ai_response
 
 app = Flask(__name__)
 
+def create_assignment_table() -> bool:
+    # Connect to the SQLite database
+    conn = sqlite3.connect('my_database.db')
+    cursor = conn.cursor()
+
+    # Create the assignments and files tables if they don't exist
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS assignments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        assignment_name TEXT NOT NULL,
+        assignment_description TEXT NOT NULL,
+        ai_help_level INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    conn.commit()
+    conn.close()
+
+def create_files_table() -> bool:
+
+    conn = sqlite3.connect('my_database.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        assignment_id INTEGER NOT NULL,
+        file_path TEXT NOT NULL,
+        file_type TEXT CHECK(file_type IN ('question', 'mark_scheme', 'resource')) NOT NULL,
+        FOREIGN KEY (assignment_id) REFERENCES assignments(id)
+    )''')
+
+    conn.commit()
+    conn.close()
+
+def create_tables():
+    create_assignment_table()
+    create_files_table()
+
 def get_assignments():
+    create_tables()
     conn = sqlite3.connect('my_database.db')
     cursor = conn.cursor()
     cursor.execute('''
@@ -48,6 +88,14 @@ def studentLogin():
 @app.route('/student')
 def student():
     return render_template('student.html')
+
+@app.route('/studentHelp', methods=['POST'])
+def studentHelp():
+    question = request.form['question']
+    ai_help_level = request.form['aiHelpLevel']
+    message = get_ai_response(question, ai_help_level)
+    return jsonify({'message': message})
+
 
 @app.route('/teacher')
 def teacher():

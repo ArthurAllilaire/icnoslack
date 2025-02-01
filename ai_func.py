@@ -20,3 +20,6 @@ message = client.messages.create(
     ]
 )
 print(message.content)
+
+def get_ai_response():
+    pass
