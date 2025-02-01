@@ -12,14 +12,11 @@
         <h1 class="text-3xl font-bold mb-4 text-center">📚 {{ assignment_name }}</h1>
         <p class="text-lg text-gray-600 text-center mb-6">{{ assignment_description }}</p>
 
-        <h2 class="text-xl font-semibold mb-2">👩‍🎓 Students Who Accessed This Assignment</h2>
-        <div class="space-y-2">
-            {% for student in students %}
-                <a href="{{ url_for('student_chat_history', assignment_id=assignment_id, student_name=student) }}"
-                   class="block p-3 bg-gray-100 rounded-lg shadow-md text-blue-500 font-semibold text-center hover:bg-gray-200 transition duration-300">
-                    {{ student }}
-                </a>
-            {% endfor %}
+
+
+        <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold mb-2">🤖 AI Summary</h3>
+            <p class="text-gray-700">{{ summary }}</p>
         </div>
 
         <button onclick="window.history.back();" 

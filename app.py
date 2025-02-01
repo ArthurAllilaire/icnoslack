@@ -276,7 +276,7 @@ def teacher():
     assignments = get_assignments()
     return render_template('teacher.html', assignments=assignments)
 
-@app.route('/teacherSummary')
+
 def summary(assignment_id):
     conn = sqlite3.connect('my_database.db')
     cursor = conn.cursor()
@@ -289,7 +289,7 @@ def summary(assignment_id):
     history = cursor.fetchall()
     conn.close()
     summary = get_ai_summary(history)
-    
+    return summary
 
 @app.route('/uploadAssignment', methods=['POST'])
 def uploadAssignment():
@@ -369,10 +369,11 @@ def assignment_details(assignment_id):
     if not assignment:
         return "Assignment not found", 404
 
+    
     return render_template('assignment_details.html', assignment_id=assignment_id, 
                            assignment_name=assignment[0], 
                            assignment_description=assignment[1], 
-                           students=students)
+                           students=students, summary=summary(str(assignment_id)))
 
 if __name__ == '__main__':
     app.run(debug=True)
