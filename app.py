@@ -3,7 +3,7 @@ from markupsafe import Markup
 import os
 import createAssignment as ca
 import sqlite3
-from ai_func import get_ai_response
+from ai_func import get_ai_response, get_ai_summary
 from datetime import datetime
 import markdown
 from markdown.extensions.extra import ExtraExtension
@@ -275,6 +275,21 @@ def chat_message():
 def teacher():
     assignments = get_assignments()
     return render_template('teacher.html', assignments=assignments)
+
+@app.route('/teacherSummary')
+def summary(assignment_id):
+    conn = sqlite3.connect('my_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT student_name, question, answer
+    FROM chat_history
+    WHERE assignment_id = ?
+    ORDER BY student_name, timestamp;
+    """, assignment_id)
+    history = cursor.fetchall()
+    conn.close()
+    summary = get_ai_summary(history)
+    
 
 @app.route('/uploadAssignment', methods=['POST'])
 def uploadAssignment():
