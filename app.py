@@ -104,9 +104,16 @@ def student():
 
 @app.route('/studentHelp', methods=['POST'])
 def studentHelp():
+    # get a file called answerFile
+    # get an assignment id
+    # get the right files - upload to the prompt
+    # return that to user as some kind of json
+    # return jsonify({'message': 'Your answer has been submitted!'})
+    # do a second request and store in some database
     question = request.form['question']
     ai_help_level = request.form['aiHelpLevel']
-    message = get_ai_response(question, ai_help_level)
+    assignment_id = request.form['assignmentId']
+    message = get_ai_response(question, ai_help_level,assignment_id)
     return jsonify({'message': message})
 
 @app.route('/teacher')
@@ -126,7 +133,9 @@ def uploadAssignment():
     assignmentId = str(ca.create_assignment(assignment_name, task_description, ai_help_level))
     ca.create_files
     
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Create uploads directory if it doesn't exist
+    UPLOAD_FOLDER = 'uploads'  # Set a folder where the uploaded files will be stored
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Create uploads directory if it doesn't exist
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     
     question_file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{assignmentId}_{question_file.filename}")
     question_file.save(question_file_path)
