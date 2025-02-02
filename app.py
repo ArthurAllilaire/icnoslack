@@ -389,18 +389,51 @@ def assignment_details(assignment_id):
     ORDER BY student_name
     ''', (assignment_id,))
     
-    students = [row[0] for row in cursor.fetchall()]
+    students = [row[0] for row in cursor.fetchall()]  # List of student names
     
     conn.close()
 
     if not assignment:
         return "Assignment not found", 404
 
-    
-    return render_template('assignment_details.html', assignment_id=assignment_id, 
+    # Debugging
+    print("Students list:", students)  # Check if students are retrieved correctly
+
+    return render_template('assignment_details.html', 
+                           assignment_id=assignment_id, 
                            assignment_name=assignment[0], 
                            assignment_description=assignment[1], 
-                           students=students, summary=summary(str(assignment_id)))
+                           students=students, 
+                           summary=summary(str(assignment_id)))
+
+@app.route('/student_chat_history/<student_name>/<int:assignment_id>')
+def student_chat_history(student_name, assignment_id):
+    conn = sqlite3.connect('my_database.db')
+    cursor = conn.cursor()
+    
+    # Fetch assignment details
+    cursor.execute("SELECT id, assignment_name FROM assignments WHERE id = ?", (assignment_id,))
+    assignment = cursor.fetchone()
+    
+    if not assignment:
+        return "Assignment not found", 404
+    
+    # Convert to a dictionary
+    assignment = {'id': assignment[0], 'name': assignment[1]}
+
+    # Fetch chat history with the correct timestamp (ensuring it represents the AI response time)
+    cursor.execute("""
+    SELECT question, answer, timestamp 
+    FROM chat_history 
+    WHERE student_name = ? AND assignment_id = ?
+    ORDER BY timestamp ASC
+    """, (student_name, assignment_id))
+    
+    chat_history = [{'question': row[0], 'answer': row[1], 'timestamp': row[2]} for row in cursor.fetchall()]
+
+    conn.close()
+
+    return render_template('chat_history.html', student=student_name, assignment=assignment, chat_history=chat_history)
 
 if __name__ == '__main__':
     app.run(debug=True)

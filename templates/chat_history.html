@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat History - {{ student }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 p-8 text-white">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8 text-gray-800">
+        <h1 class="text-3xl font-bold mb-6">Chat History for {{ student }}</h1>
+        <h2 class="text-xl font-semibold mb-4">Assignment: {{ assignment.name }}</h2>
+        
+        <div class="space-y-4">
+            {% if chat_history %}
+                {% for chat in chat_history %}
+                    <div class="p-4 bg-gray-100 rounded-lg shadow">
+                        <p class="font-semibold text-gray-800">You:</p>
+                        <p class="text-gray-700">{{ chat.question }}</p>
+                        
+                        <p class="font-semibold text-gray-800 mt-2">AI Response:</p>
+                        <p class="text-gray-700">{{ chat.answer | safe }}</p>
+                
+                        <!-- Place timestamp under AI response -->
+                        <p class="text-sm text-gray-500 mt-2">Response Time: {{ chat.timestamp }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-500 italic">No chat history available for this student.</p>
+            {% endif %}
+        </div>
+
+        <div class="text-center mt-6">
+            <a href="{{ url_for('assignment_details', assignment_id=assignment['id']) }}" 
+               class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">
+                ← Back to Assignment
+            </a>        
+        </div>
+    </div>
+</body>
+</html>
