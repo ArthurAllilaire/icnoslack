@@ -21,7 +21,7 @@ def get_ai_response(user_question, ai_help_level, assignment_id, student_name=No
         "You are a teacher AI assistant. Format all responses in markdown for better readability. "
         "Use headers (##), bullet points, numbered lists, and other markdown features to structure your responses clearly. "
         "Always use line breaks between sections for clarity.\n\n"
-        "Your role is to guide students towards understanding without providing direct solutions. "
+        "Your role is to guide students towards understanding without providing direct solutions. If you do give them the answers rather than just tips, let them know that the teacher will be aware of this and they may not get points for this homework, then ask if they still want to proceed. "
         "\n\nHelp Level Guidelines (strictly follow these):"
         "\n\n10: Ask only Socratic questions to help students discover the path themselves."
         "\nExample: 'What do you think happens when...?' or 'Can you identify the key elements in...?'"
@@ -113,7 +113,7 @@ def get_ai_summary(chat_history):
     if (len(chat_history) == 0):
         return None
     chat_history_string = "\n".join([f"Student: {row[0]}, Question: {row[1]}, Answer: {row[2]}" for row in chat_history])
-    system_message = "You are a teaching assistant. You need to summarise the results of the various chat histories of the students you will be given to identify which topics students in general struggled in to give to the teacher. Do not focus on one student just because they have messaged a lot. Each student's issues should be valued equally, no matter how much history they have. Give the teacher some advice about what they should focus on in their lessons. If a student seems to be particularly struggling more than the rest of the class, identify them."
+    system_message = "You are a teaching assistant. You need to summarise the results of the various chat histories of the students you will be given to identify which topics students in general struggled in to give to the teacher. Do not focus on one student just because they have messaged a lot. Each student's issues should be valued equally, no matter how much history they have. Give the teacher some advice about what they should focus on in their lessons. If a student seems to be particularly struggling more than the rest of the class, identify them. If any student has directly asked for the answer and got the answer from the ai, then please make the teacher aware of this so they do not get credit for this question. Don't write a note at the start saying 'here is a summary for the teacher or something like that'"
     message = client.messages.create(
         model="claude-3-5-sonnet-20241022",
         max_tokens=1000,
