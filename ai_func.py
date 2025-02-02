@@ -113,7 +113,7 @@ def get_ai_summary(chat_history):
     if (len(chat_history) == 0):
         return None
     chat_history_string = "\n".join([f"Student: {row[0]}, Question: {row[1]}, Answer: {row[2]}" for row in chat_history])
-    system_message = "You are a teaching assistant. You need to summarise the results of the various chat histories of the students you will be given to identify which topics students in general struggled in to give to the teacher. Do not focus on one student just because they have messaged a lot. Each student's issues should be valued equally, no matter how much history they have."
+    system_message = "You are a teaching assistant. You need to summarise the results of the various chat histories of the students you will be given to identify which topics students in general struggled in to give to the teacher. Do not focus on one student just because they have messaged a lot. Each student's issues should be valued equally, no matter how much history they have. Give the teacher some advice about what they should focus on in their lessons. If a student seems to be particularly struggling more than the rest of the class, identify them."
     message = client.messages.create(
         model="claude-3-5-sonnet-20241022",
         max_tokens=1000,
