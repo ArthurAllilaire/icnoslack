@@ -220,6 +220,22 @@ def get_chat_history(student_name, assignment_id):
         'conversation': formatted_history
     }
 
+def process_response(text):
+    """Process AI response text to handle both markdown and LaTeX"""
+    # Temporarily replace LaTeX delimiters with placeholders
+    text = text.replace('$', '§MATH§')
+    
+    # Convert markdown to HTML
+    html = markdown.markdown(
+        text,
+        extensions=['extra', 'nl2br', 'sane_lists']
+    )
+    
+    # Restore LaTeX delimiters
+    html = html.replace('§MATH§', '$')
+    
+    return html
+
 @app.route('/studentHelp', methods=['POST'])
 def studentHelp():
     print("Headers:", request.headers)  # Debug: Print request headers
@@ -267,10 +283,7 @@ def studentHelp():
     
     # Get new AI response
     ai_response = get_ai_response(question, ai_help_level, assignment_id, student_name)[0]
-    response_text = markdown.markdown(
-        ai_response.text,
-        extensions=['extra', 'nl2br', 'sane_lists']
-    )
+    response_text = process_response(ai_response.text)
     
     # Store chat in database
     conn = sqlite3.connect('my_database.db')
@@ -336,10 +349,8 @@ def summary(assignment_id):
     if (ai_response == None):
         return None
     else:
-        summary_text = markdown.markdown(
-            ai_response[0].text,
-            extensions=['extra', 'nl2br', 'sane_lists']
-        )
+        # Use the same process_response function we use for chat messages
+        summary_text = process_response(ai_response[0].text)
         return summary_text
 
 @app.route('/uploadAssignment', methods=['POST'])
