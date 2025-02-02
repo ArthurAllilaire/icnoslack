@@ -142,8 +142,27 @@ def student():
     student_name = session.get('student_name')
     if not student_name:
         return redirect(url_for('studentLogin'))
+    
     assignments = get_assignments()
-    return render_template('student.html', student_name=student_name, assignments=assignments)
+    if assignments:
+        # Get first assignment as default
+        default_assignment = assignments[0]
+        chat_history = get_chat_history(student_name, str(default_assignment['id']))['display']
+        ai_help_level = get_assignment_help_level(str(default_assignment['id']))
+        
+        return render_template('chat.html',
+                             student_name=student_name,
+                             assignment_id=str(default_assignment['id']),
+                             assignments=assignments,
+                             current_assignment=default_assignment,
+                             chat_history=chat_history,
+                             ai_help_level=ai_help_level,
+                             show_welcome=True)  # New flag for welcome message
+    else:
+        return render_template('chat.html',
+                             student_name=student_name,
+                             assignments=[],
+                             show_welcome=True)  # Show welcome even with no assignments
 
 def get_assignment_help_level(assignment_id):
     conn = sqlite3.connect('my_database.db')
@@ -161,106 +180,99 @@ def get_chat_history(student_name, assignment_id):
     """Returns chat history in two formats: display format and AI conversation format"""
     conn = sqlite3.connect('my_database.db')
     cursor = conn.cursor()
+    
+    # Get chat messages with associated file uploads
     cursor.execute('''
-    SELECT question, answer, timestamp
-    FROM chat_history
-    WHERE student_name = ? AND assignment_id = ?
-    ORDER BY timestamp ASC
+    SELECT ch.question, ch.answer, ch.timestamp, su.file_path
+    FROM chat_history ch
+    LEFT JOIN student_uploads su 
+    ON ch.student_name = su.student_name 
+    AND ch.assignment_id = su.assignment_id 
+    AND ch.question = su.question
+    WHERE ch.student_name = ? AND ch.assignment_id = ?
+    ORDER BY ch.timestamp ASC
     ''', (student_name, assignment_id))
+    
     history = cursor.fetchall()
+    
+    # Process file paths to get just the filename
+    processed_history = []
+    for q, a, t, file_path in history:
+        if file_path:
+            # Get just the filename from the full path
+            filename = os.path.basename(file_path)
+            processed_history.append((q, a, t, filename))
+        else:
+            processed_history.append((q, a, t, None))
+    
     conn.close()
     
     # Format history for AI context
     formatted_history = []
-    for q, a, _ in history:  # Ignore timestamp for AI format
+    for q, a, _, _ in processed_history:  # Ignore timestamp and file_path for AI format
         formatted_history.extend([
             {"role": "user", "content": q},
             {"role": "assistant", "content": a}
         ])
     
     return {
-        'display': history,  # For template display
-        'conversation': formatted_history  # For AI context
+        'display': processed_history,  # Now contains just filenames
+        'conversation': formatted_history
     }
 
 @app.route('/studentHelp', methods=['POST'])
 def studentHelp():
+    print("Headers:", request.headers)  # Debug: Print request headers
+    print("Form data:", request.form)
+    print("Files:", request.files)
+    
     student_name = session.get('student_name')
+    if not student_name:
+        return jsonify({'error': 'Not logged in'}), 401
+        
     assignment_id = request.form['assignmentId']
     question = request.form['question']
     
-    try:
-        # Get AI help level from the assignment
-        ai_help_level = get_assignment_help_level(assignment_id)
+    # Get AI help level from the assignment
+    ai_help_level = get_assignment_help_level(assignment_id)
+    
+    # Handle file upload first
+    answer_file = request.files.get('answerFile')
+    if answer_file and answer_file.filename:
+        allowed_extensions = {'.pdf', '.txt', '.doc', '.docx', '.jpg', '.jpeg', '.png'}
+        file_ext = os.path.splitext(answer_file.filename)[1].lower()
         
-        # Only handle file upload if a file was actually submitted
-        if 'answerFile' in request.files and request.files['answerFile'].filename != '':
-            answer_file = request.files['answerFile']
-            answer_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'answers')
-            os.makedirs(answer_folder, exist_ok=True)
-            
-            answer_file_path = os.path.join(answer_folder, f"{student_name}_{assignment_id}_{answer_file.filename}")
-            answer_file.save(answer_file_path)
-            
-            # Store file upload in database
-            conn = sqlite3.connect('my_database.db')
-            cursor = conn.cursor()
-            cursor.execute('''
-            INSERT INTO student_uploads (student_name, assignment_id, question, file_path)
-            VALUES (?, ?, ?, ?)''', (student_name, assignment_id, question, answer_file_path))
-            conn.commit()
-            conn.close()
+        if file_ext not in allowed_extensions:
+            return jsonify({'error': 'Invalid file type'}), 400
         
-        # Get AI response with conversation history
-        ai_response = get_ai_response(question, ai_help_level, assignment_id, student_name)[0]
-        # Use markdown with extensions for better parsing
-        response_text = markdown.markdown(
-            ai_response.text,
-            extensions=['extra', 'nl2br', 'sane_lists']
-        )
+        # Create upload directory if it doesn't exist
+        answer_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'answers')
+        os.makedirs(answer_folder, exist_ok=True)
         
-        # Store chat in database
+        # Generate safe filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        safe_filename = f"{student_name}_{assignment_id}_{timestamp}{file_ext}"
+        answer_file_path = os.path.join(answer_folder, safe_filename)
+        
+        # Save file and record in database
+        answer_file.save(answer_file_path)
+        
         conn = sqlite3.connect('my_database.db')
         cursor = conn.cursor()
         cursor.execute('''
-        INSERT INTO chat_history (student_name, assignment_id, question, answer)
-        VALUES (?, ?, ?, ?)''', (student_name, assignment_id, question, response_text))
+        INSERT INTO student_uploads (student_name, assignment_id, question, file_path)
+        VALUES (?, ?, ?, ?)''', (student_name, assignment_id, question, answer_file_path))
         conn.commit()
         conn.close()
-        
-        return redirect(url_for('chat', assignment_id=assignment_id))
     
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 404
-
-@app.route('/chat/<assignment_id>')
-def chat(assignment_id):
-    student_name = session.get('student_name')
-    if not student_name:
-        return redirect(url_for('studentLogin'))
-    
-    chat_history = get_chat_history(student_name, assignment_id)['display']  # Use display format
-    ai_help_level = get_assignment_help_level(assignment_id)
-    
-    return render_template('chat.html', 
-                         student_name=student_name,
-                         assignment_id=assignment_id,
-                         chat_history=chat_history,
-                         ai_help_level=ai_help_level)
-
-@app.route('/chat_message', methods=['POST'])
-def chat_message():
-    student_name = session.get('student_name')
-    assignment_id = request.form['assignmentId']
-    question = request.form['question']
-    
-    ai_help_level = get_assignment_help_level(assignment_id)
+    # Get new AI response
     ai_response = get_ai_response(question, ai_help_level, assignment_id, student_name)[0]
     response_text = markdown.markdown(
         ai_response.text,
         extensions=['extra', 'nl2br', 'sane_lists']
     )
     
+    # Store chat in database
     conn = sqlite3.connect('my_database.db')
     cursor = conn.cursor()
     cursor.execute('''
@@ -269,7 +281,38 @@ def chat_message():
     conn.commit()
     conn.close()
     
-    return jsonify({'message': response_text})
+    # Check if this is an AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'message': response_text})
+    
+    # For regular form submit, redirect to chat page
+    return redirect(url_for('chat', assignment_id=assignment_id))
+
+@app.route('/chat/<assignment_id>')
+def chat(assignment_id):
+    student_name = session.get('student_name')
+    if not student_name:
+        return redirect(url_for('studentLogin'))
+    
+    # Get all assignments for the sidebar
+    assignments = get_assignments()
+    
+    # Get current assignment details
+    current_assignment = next((a for a in assignments if str(a['id']) == str(assignment_id)), None)
+    if not current_assignment:
+        return "Assignment not found", 404
+    
+    chat_history = get_chat_history(student_name, assignment_id)['display']
+    ai_help_level = get_assignment_help_level(assignment_id)
+    
+    return render_template('chat.html', 
+                         student_name=student_name,
+                         assignment_id=assignment_id,
+                         assignments=assignments,
+                         current_assignment=current_assignment,
+                         chat_history=chat_history,
+                         ai_help_level=ai_help_level,
+                         show_welcome=False)  # Don't show welcome message in chat view
 
 @app.route('/teacher')
 def teacher():
@@ -330,7 +373,6 @@ def uploadAssignment():
     
     ca.create_files(assignmentId, question_file_path, markscheme_file_path, resource_file_paths)
     
-    # Redirect back to the main teacher page
     return redirect(url_for('teacher'))
 
 @app.route('/upload', methods=['POST'])
@@ -344,13 +386,20 @@ def upload():
     answer_file_path = os.path.join(answer_folder, f"{assignment_id}_{answer_file.filename}")
     answer_file.save(answer_file_path)
     
-    # You can add code here to save the answer file information to the database if needed
-    
     return redirect(url_for('student'))
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    # First try in the main uploads directory
+    if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    
+    # Then try in the answers subdirectory
+    answers_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'answers')
+    if os.path.exists(os.path.join(answers_folder, filename)):
+        return send_from_directory(answers_folder, filename)
+    
+    return "File not found", 404
 
 @app.route('/assignment/<int:assignment_id>')
 def assignment_details(assignment_id):
@@ -370,18 +419,51 @@ def assignment_details(assignment_id):
     ORDER BY student_name
     ''', (assignment_id,))
     
-    students = [row[0] for row in cursor.fetchall()]
+    students = [row[0] for row in cursor.fetchall()]  # List of student names
     
     conn.close()
 
     if not assignment:
         return "Assignment not found", 404
 
-    
-    return render_template('assignment_details.html', assignment_id=assignment_id, 
+    # Debugging
+    print("Students list:", students)  # Check if students are retrieved correctly
+
+    return render_template('assignment_details.html', 
+                           assignment_id=assignment_id, 
                            assignment_name=assignment[0], 
                            assignment_description=assignment[1], 
-                           students=students, summary=summary(str(assignment_id)))
+                           students=students, 
+                           summary=summary(str(assignment_id)))
+
+@app.route('/student_chat_history/<student_name>/<int:assignment_id>')
+def student_chat_history(student_name, assignment_id):
+    conn = sqlite3.connect('my_database.db')
+    cursor = conn.cursor()
+    
+    # Fetch assignment details
+    cursor.execute("SELECT id, assignment_name FROM assignments WHERE id = ?", (assignment_id,))
+    assignment = cursor.fetchone()
+    
+    if not assignment:
+        return "Assignment not found", 404
+    
+    # Convert to a dictionary
+    assignment = {'id': assignment[0], 'name': assignment[1]}
+
+    # Fetch chat history with the correct timestamp (ensuring it represents the AI response time)
+    cursor.execute("""
+    SELECT question, answer, timestamp 
+    FROM chat_history 
+    WHERE student_name = ? AND assignment_id = ?
+    ORDER BY timestamp ASC
+    """, (student_name, assignment_id))
+    
+    chat_history = [{'question': row[0], 'answer': row[1], 'timestamp': row[2]} for row in cursor.fetchall()]
+
+    conn.close()
+
+    return render_template('chat_history.html', student=student_name, assignment=assignment, chat_history=chat_history)
 
 if __name__ == '__main__':
     app.run(debug=True)

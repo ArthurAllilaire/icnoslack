@@ -69,9 +69,10 @@
                 {% if students %}
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {% for student in students %}
-                            <div class="bg-gray-100 rounded-lg p-3 text-center">
+                            <a href="{{ url_for('student_chat_history', student_name=student, assignment_id=assignment_id) }}"
+                            class="bg-gray-100 rounded-lg p-3 text-center hover:bg-gray-200 transition duration-300 block">
                                 {{ student }}
-                            </div>
+                            </a>             
                         {% endfor %}
                     </div>
                 {% else %}
