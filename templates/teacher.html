@@ -79,7 +79,7 @@
         <h2 class="text-xl font-semibold mt-6 mb-2">📜 Created Assignments</h2>
         <div id="assignmentsList" class="space-y-4">
             {% for assignment in assignments %}
-                <div class="p-4 bg-gray-100 rounded-lg shadow-md">
+                <div id="assignment-{{ assignment.id }}" class="p-4 bg-gray-100 rounded-lg shadow-md">
                     <h3 class="text-lg font-bold text-gray-800">Assignment {{ loop.index }}: {{ assignment.name }}</h3>
                     <p class="text-gray-600">📄 Task Description: {{ assignment.taskDescription }}</p>
                     <p class="text-gray-600">📂 Question File: <a href="{{ url_for('uploaded_file', filename=assignment.questionFile.split('/')[-1]) }}" class="text-blue-500 underline">{{ assignment.questionFile }}</a></p>
@@ -93,6 +93,14 @@
                     <a href="{{ url_for('assignment_details', assignment_id=assignment.id) }}" class="mt-4 block inline-block bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
                         Assignment details
                     </a>
+                    <!-- Delete Button -->
+                    <div class="flex justify-end mt-2">
+                        <form action="{{ url_for('delete_assignment', assignment_id=assignment['id']) }}" method="POST">
+                            <button type="submit" style="background-color: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                                🗑️ Delete Assignment
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         </div>

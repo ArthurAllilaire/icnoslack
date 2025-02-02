@@ -476,5 +476,43 @@ def student_chat_history(student_name, assignment_id):
 
     return render_template('chat_history.html', student=student_name, assignment=assignment, chat_history=chat_history)
 
+@app.route('/delete_assignment/<int:assignment_id>', methods=['POST'])
+def delete_assignment(assignment_id):
+    try:
+        conn = sqlite3.connect('my_database.db')
+        cursor = conn.cursor()
+
+        # Retrieve assignment details to get the file paths
+        cursor.execute('SELECT * FROM files WHERE assignment_id = ?', (assignment_id,))
+        files = cursor.fetchall()
+
+        if not files:
+            print(f"No files found for assignment ID {assignment_id}.")  # Debugging
+
+        # Delete the assignment from the database
+        cursor.execute('DELETE FROM assignments WHERE id = ?', (assignment_id,))
+        cursor.execute('DELETE FROM files WHERE assignment_id = ?', (assignment_id,))
+        cursor.execute('DELETE FROM student_uploads WHERE assignment_id = ?', (assignment_id,))
+        cursor.execute('DELETE FROM chat_history WHERE assignment_id = ?', (assignment_id,))
+        
+        conn.commit()
+        conn.close()
+
+        # Delete associated files from the server
+        for file in files:
+            file_path = file[2]  # file_path is the 3rd column in the files table
+            if os.path.exists(file_path):
+                print(f"Deleting file {file_path}")  # Debugging
+                os.remove(file_path)
+            else:
+                print(f"File {file_path} not found.")  # Debugging
+
+        # Redirect to the teacher's page with updated assignments
+        return redirect(url_for('teacher'))
+
+    except Exception as e:
+        print(f"Error: {e}")  # Debugging
+        return "Error deleting assignment. Please try again.", 500
+
 if __name__ == '__main__':
     app.run(debug=True)
