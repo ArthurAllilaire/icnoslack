@@ -288,8 +288,13 @@ def summary(assignment_id):
     """, assignment_id)
     history = cursor.fetchall()
     conn.close()
-    summary = get_ai_summary(history)
-    return summary
+    
+    ai_response = get_ai_summary(history)[0]
+    summary_text = markdown.markdown(
+        ai_response.text,
+        extensions=['extra', 'nl2br', 'sane_lists']
+    )
+    return summary_text
 
 @app.route('/uploadAssignment', methods=['POST'])
 def uploadAssignment():

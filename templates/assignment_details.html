@@ -5,25 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assignment Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .prose {
+            max-width: none;
+        }
+        .prose p {
+            margin-top: 1em;
+            margin-bottom: 1em;
+            white-space: pre-wrap;
+        }
+        .prose ul, .prose ol {
+            margin: 1em 0;
+            padding-left: 2em;
+            list-style: disc outside none;
+        }
+        .prose li {
+            margin: 0.5em 0;
+            padding-left: 0.5em;
+        }
+        .prose h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 1.5em 0 0.5em 0;
+        }
+        .prose h3 {
+            font-size: 1.25em;
+            font-weight: bold;
+            margin: 1.25em 0 0.5em 0;
+        }
+        .prose code {
+            background-color: #f3f4f6;
+            padding: 0.2em 0.4em;
+            border-radius: 0.25em;
+            font-family: monospace;
+        }
+        .prose pre {
+            background-color: #f3f4f6;
+            padding: 1em;
+            border-radius: 0.5em;
+            margin: 1em 0;
+            overflow-x: auto;
+        }
+        .prose blockquote {
+            border-left: 4px solid #e5e7eb;
+            padding-left: 1em;
+            margin: 1em 0;
+            color: #4b5563;
+        }
+    </style>
 </head>
-<body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4">
+<body class="min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <h1 class="text-3xl font-bold mb-6">{{ assignment_name }}</h1>
+            
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-2">Description</h2>
+                <p class="text-gray-700">{{ assignment_description }}</p>
+            </div>
 
-    <div class="space-y-4 bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-2xl">
-        <h1 class="text-3xl font-bold mb-4 text-center">📚 {{ assignment_name }}</h1>
-        <p class="text-lg text-gray-600 text-center mb-6">{{ assignment_description }}</p>
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Students Who Accessed This Assignment</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {% for student in students %}
+                        <div class="bg-gray-100 rounded-lg p-3 text-center">
+                            {{ student }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
 
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">AI Summary of Student Interactions</h2>
+                <div class="bg-gray-50 rounded-lg p-6 prose prose-sm">
+                    {{ summary|safe }}
+                </div>
+            </div>
 
-
-        <div class="bg-gray-100 p-4 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold mb-2">🤖 AI Summary</h3>
-            <p class="text-gray-700">{{ summary }}</p>
+            <div class="text-center">
+                <a href="{{ url_for('teacher') }}" 
+                   class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">
+                    ← Back to Dashboard
+                </a>
+            </div>
         </div>
-
-        <button onclick="window.history.back();" 
-            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
-            ← Back to Assignments
-        </button>
     </div>
-
 </body>
 </html>
