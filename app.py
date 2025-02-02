@@ -142,8 +142,27 @@ def student():
     student_name = session.get('student_name')
     if not student_name:
         return redirect(url_for('studentLogin'))
+    
     assignments = get_assignments()
-    return render_template('student.html', student_name=student_name, assignments=assignments)
+    if assignments:
+        # Get first assignment as default
+        default_assignment = assignments[0]
+        chat_history = get_chat_history(student_name, str(default_assignment['id']))['display']
+        ai_help_level = get_assignment_help_level(str(default_assignment['id']))
+        
+        return render_template('chat.html',
+                             student_name=student_name,
+                             assignment_id=str(default_assignment['id']),
+                             assignments=assignments,
+                             current_assignment=default_assignment,
+                             chat_history=chat_history,
+                             ai_help_level=ai_help_level,
+                             show_welcome=True)  # New flag for welcome message
+    else:
+        return render_template('chat.html',
+                             student_name=student_name,
+                             assignments=[],
+                             show_welcome=True)  # Show welcome even with no assignments
 
 def get_assignment_help_level(assignment_id):
     conn = sqlite3.connect('my_database.db')
@@ -275,14 +294,25 @@ def chat(assignment_id):
     if not student_name:
         return redirect(url_for('studentLogin'))
     
-    chat_history = get_chat_history(student_name, assignment_id)['display']  # Use display format
+    # Get all assignments for the sidebar
+    assignments = get_assignments()
+    
+    # Get current assignment details
+    current_assignment = next((a for a in assignments if str(a['id']) == str(assignment_id)), None)
+    if not current_assignment:
+        return "Assignment not found", 404
+    
+    chat_history = get_chat_history(student_name, assignment_id)['display']
     ai_help_level = get_assignment_help_level(assignment_id)
     
     return render_template('chat.html', 
                          student_name=student_name,
                          assignment_id=assignment_id,
+                         assignments=assignments,
+                         current_assignment=current_assignment,
                          chat_history=chat_history,
-                         ai_help_level=ai_help_level)
+                         ai_help_level=ai_help_level,
+                         show_welcome=False)  # Don't show welcome message in chat view
 
 @app.route('/teacher')
 def teacher():
