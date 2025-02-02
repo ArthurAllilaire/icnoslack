@@ -70,15 +70,18 @@
                     </div>
 
                     <button type="submit" 
-                            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-300">
+                            class="block mx-auto bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-300">
                         📤 Submit Question
                     </button>
                 </form>
 
-                <button onclick="window.history.back();" 
-                    class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
-                    ← Back
-                </button>
+                <div class="w-full flex justify-center">
+                    <a href="{{ url_for('studentLogin') }}"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                        ← Back
+                    </a>
+                </div>
+                
             </div>
         </div>
     </div>
