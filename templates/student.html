@@ -7,10 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-r from-blue-500 to-purple-500">
-    <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4 text-white text-center">Welcome, {{ student_name }}!</h1>
-        
+
+    <!-- Banner -->
+    <div class="bg-white text-4xl font-bold text-center py-4 shadow-md w-full fixed top-0 left-0 z-10">
+        <span class="bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">Homework Genie</span>
+    </div>
+
+    <!-- Main container below the banner -->
+    <div class="container mx-auto p-4 mt-24">
+
         <div class="flex gap-6">
+
             <!-- Scrollable Assignment List -->
             <div class="w-1/3 bg-white rounded-2xl shadow-lg p-4 h-[800px] overflow-y-auto">
                 <h2 class="text-xl font-semibold mb-4 sticky top-0 bg-white pb-2 border-b">📜 Available Assignments</h2>
@@ -41,11 +48,14 @@
                 </div>
             </div>
 
-            <!-- Form Section -->
-            <div class="space-y-4 w-2/3 bg-white rounded-2xl shadow-lg p-8">
+            <!-- Form Section (Including Welcome Message and AI Question Form) -->
+            <div class="w-2/3 bg-white rounded-2xl shadow-lg p-8 space-y-6">
+                <!-- Welcome Message -->
+                <h1 class="text-3xl font-bold text-center text-gray-800">Welcome, {{ student_name }}!</h1>
+
                 <form id="assignmentForm" action="{{ url_for('studentHelp') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     <div>
-                        <label class="block text-gray-700 font-semibold mb-2">Select Assignment</label>
+                        <h2 class="text-xl font-semibold mb-2">Select Assignment</h2>
                         <select id="assignmentId" name="assignmentId" required 
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <option value="" disabled selected>Choose an assignment</option>
