@@ -110,6 +110,8 @@ def get_ai_response(user_question, ai_help_level, assignment_id, student_name=No
 
 def get_ai_summary(chat_history):
     client = anthropic.Anthropic()
+    if (len(chat_history) == 0):
+        return None
     chat_history_string = "\n".join([f"Student: {row[0]}, Question: {row[1]}, Answer: {row[2]}" for row in chat_history])
     system_message = "You are a teaching assistant. You need to summarise the results of the various chat histories of the students you will be given to identify which topics students in general struggled in to give to the teacher. Do not focus on one student just because they have messaged a lot. Each student's issues should be valued equally, no matter how much history they have."
     message = client.messages.create(

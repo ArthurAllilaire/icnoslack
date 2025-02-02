@@ -66,21 +66,31 @@
 
             <div class="mb-8">
                 <h2 class="text-xl font-semibold mb-4">Students Who Accessed This Assignment</h2>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {% for student in students %}
-                        <div class="bg-gray-100 rounded-lg p-3 text-center">
-                            {{ student }}
-                        </div>
-                    {% endfor %}
-                </div>
+                {% if students %}
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {% for student in students %}
+                            <div class="bg-gray-100 rounded-lg p-3 text-center">
+                                {{ student }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 italic">No students have accessed this assignment yet.</p>
+                {% endif %}
             </div>
+            
 
             <div class="mb-8">
                 <h2 class="text-xl font-semibold mb-4">AI Summary of Student Interactions</h2>
                 <div class="bg-gray-50 rounded-lg p-6 prose prose-sm">
-                    {{ summary|safe }}
+                    {% if summary %}
+                        {{ summary|safe }}
+                    {% else %}
+                        <p class="text-gray-500 italic">No students have accessed this assignment yet.</p>
+                    {% endif %}
                 </div>
             </div>
+            
 
             <div class="text-center">
                 <a href="{{ url_for('teacher') }}" 
