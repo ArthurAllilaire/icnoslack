@@ -58,49 +58,107 @@
         }
     </style>
     <script>
-        function sendMessage() {
+        function updateFileLabel() {
+            const fileInput = document.getElementById('fileInput');
+            const fileLabel = document.getElementById('fileLabel');
+            const fileName = document.getElementById('fileName');
+            
+            if (fileInput.files.length > 0) {
+                fileName.textContent = fileInput.files[0].name;
+                fileLabel.classList.remove('hidden');
+            }
+        }
+
+        function clearFile() {
+            const fileInput = document.getElementById('fileInput');
+            const fileLabel = document.getElementById('fileLabel');
+            fileInput.value = '';
+            fileLabel.classList.add('hidden');
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
             const questionInput = document.getElementById('questionInput');
+            const fileInput = document.getElementById('fileInput');
             const question = questionInput.value.trim();
             
             if (question === '') return;
             
-            // Add user message to chat
+            const formData = new FormData();
+            formData.append('assignmentId', '{{ assignment_id }}');
+            formData.append('question', question);
+            
+            // Only append file if one is selected
+            if (fileInput.files.length > 0) {
+                console.log("File selected:", fileInput.files[0].name);  // Debug log
+                formData.append('answerFile', fileInput.files[0]);
+            } else {
+                console.log("No file selected");  // Debug log
+            }
+            
+            // Debug: Log form data
+            for (let pair of formData.entries()) {
+                console.log(pair[0], pair[1]);
+            }
+            
+            // Add message to chat immediately
             const chatMessages = document.getElementById('chatMessages');
             chatMessages.innerHTML += `
                 <div class="flex justify-end mb-4">
                     <div class="bg-blue-500 text-white rounded-lg py-2 px-4 max-w-[80%]">
                         ${question}
+                        ${fileInput.files.length > 0 ? '<br><small class="text-gray-200">📎 ' + fileInput.files[0].name + '</small>' : ''}
+                    </div>
+                </div>
+                <div id="loading-${Date.now()}" class="flex justify-start mb-4">
+                    <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4">
+                        Thinking...
                     </div>
                 </div>
             `;
             
-            // Clear input
+            // Clear inputs and scroll to bottom
             questionInput.value = '';
+            clearFile();
+            scrollToBottom();
             
-            // Send to server
-            fetch('{{ url_for("chat_message") }}', {
+            // Send to server using studentHelp endpoint
+            fetch('{{ url_for("studentHelp") }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'  // Add this header
                 },
-                body: new URLSearchParams({
-                    'assignmentId': '{{ assignment_id }}',
-                    'question': question
-                })
+                body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                // Add AI response to chat
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(() => {
+                // Refresh the chat content to show new messages
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 chatMessages.innerHTML += `
                     <div class="flex justify-start mb-4">
-                        <div class="bg-gray-200 text-gray-800 rounded-lg py-2 px-4 max-w-[80%] prose prose-sm">
-                            ${data.message}
+                        <div class="bg-red-100 text-red-800 rounded-lg py-2 px-4">
+                            Error sending message. Please try again.
                         </div>
                     </div>
                 `;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                scrollToBottom();
             });
         }
+
+        // Function to scroll to bottom of chat
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Scroll to bottom on page load
+        window.onload = scrollToBottom;
     </script>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4">
@@ -115,6 +173,13 @@
                 <div class="flex justify-end mb-4">
                     <div class="bg-blue-500 text-white rounded-lg py-2 px-4 max-w-[80%]">
                         {{ message[0] }}
+                        {% if message[3] %}
+                            <br><small class="text-gray-200">
+                                📎 <a href="{{ url_for('uploaded_file', filename=message[3]) }}" 
+                                     class="underline hover:text-gray-300"
+                                     target="_blank">View uploaded file</a>
+                            </small>
+                        {% endif %}
                     </div>
                 </div>
                 <!-- Answer -->
@@ -127,15 +192,31 @@
         </div>
 
         <!-- Chat Input -->
-        <div class="flex space-x-4">
-            <input type="text" id="questionInput" 
-                   class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                   placeholder="Type your question here..."
-                   onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()"
-                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">
-                Send
-            </button>
+        <div class="flex-shrink-0 border-t pt-4">
+            <form id="chatForm" class="space-y-4" onsubmit="sendMessage(event)">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="questionInput" 
+                           class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                           placeholder="Type your question here...">
+                    
+                    <label for="fileInput" 
+                           class="cursor-pointer flex items-center justify-center w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full transition-colors flex-shrink-0">
+                        <span class="text-2xl text-blue-600 transform translate-y-[-1px]">+</span>
+                    </label>
+                    <input type="file" id="fileInput" class="hidden" 
+                           accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png"
+                           onchange="updateFileLabel()">
+                           
+                    <button type="submit"
+                            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-300 flex-shrink-0">
+                        Send
+                    </button>
+                </div>
+                <div id="fileLabel" class="text-sm text-gray-500 hidden">
+                    Selected file: <span id="fileName"></span>
+                    <button type="button" onclick="clearFile()" class="text-red-500 hover:text-red-700 ml-2">×</button>
+                </div>
+            </form>
         </div>
 
         <!-- Back to Assignments -->
